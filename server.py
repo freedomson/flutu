@@ -75,7 +75,7 @@ def fetch_random_direction():
         r'name="permutation_nonce_field"\s+value="([^"]+)"', page
     )
     if not nonce_match:
-        raise ValueError("Não foi possível obter o nonce do gerador aleatório.")
+        raise ValueError("Could not retrieve the random generator nonce.")
 
     form_data = parse.urlencode(
         {
@@ -101,31 +101,31 @@ def fetch_random_direction():
     if isinstance(result, str):
         result = json.loads(result)
     if not isinstance(result, dict):
-        raise ValueError("O gerador retornou uma resposta inválida.")
+        raise ValueError("The generator returned an invalid response.")
 
     permutations = result.get("output") if result.get("type") == "success" else None
     if not isinstance(permutations, list) or not permutations:
-        raise ValueError("O gerador não retornou uma permutação.")
+        raise ValueError("The generator did not return a permutation.")
     values = permutations[0]
     if not isinstance(values, list) or not values or values[-1] not in (1, 2):
-        raise ValueError("O gerador retornou uma permutação inválida.")
+        raise ValueError("The generator returned an invalid permutation.")
     return values[-1] > 1
 
 
 def render_login_page(error_message=""):
     google_button = ""
     if GOOGLE_CLIENT_ID:
-        google_button = f'<a class="google-btn" href="{google_login_url()}">Entrar com Google</a>'
+        google_button = f'<a class="google-btn" href="{google_login_url()}">Sign in with Google</a>'
     else:
-        google_button = '<div class="google-disabled">Configure FLUTU_GOOGLE_CLIENT_ID para ativar o Login do Google.</div>'
+        google_button = '<div class="google-disabled">Set FLUTU_GOOGLE_CLIENT_ID to enable Google sign-in.</div>'
 
     error_html = "" if not error_message else f'<div class="error">{html.escape(error_message)}</div>'
     return f"""<!DOCTYPE html>
-<html lang=\"pt-BR\">
+<html lang=\"en\">
   <head>
     <meta charset=\"UTF-8\" />
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
-    <title>Flutu | Entrar</title>
+    <title>Flutu | Sign in</title>
     <style>
       :root {{
         --bg: #f3f7ff;
@@ -161,6 +161,9 @@ def render_login_page(error_message=""):
       .google-btn, .google-disabled {{ display: block; width: 100%; margin-top: 12px; padding: 12px 16px; border-radius: 14px; text-align: center; text-decoration: none; font-weight: 700; }}
       .google-btn {{ background: #ffffff; border: 1px solid #d6e0ff; color: #1f2d3d; }}
       .google-disabled {{ background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }}
+            .repo-link {{ display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 14px; padding: 11px 16px; border: 1px solid #dfe4ec; border-radius: 14px; color: #24292f; background: #fff; font-weight: 700; text-decoration: none; transition: background 0.2s ease, border-color 0.2s ease; }}
+            .repo-link:hover {{ background: #f6f8fa; border-color: #afb8c1; }}
+            .repo-link svg {{ width: 20px; height: 20px; fill: currentColor; flex: 0 0 auto; }}
       .error {{ margin-top: 10px; color: var(--error); font-size: 0.85rem; min-height: 20px; }}
       @media (max-width: 520px) {{ .login-shell {{ border-radius: 24px; }} .form-side {{ padding: 20px 16px; }} .login-box {{ padding: 26px 20px 18px; }} }}
     </style>
@@ -174,25 +177,29 @@ def render_login_page(error_message=""):
             <div class=\"brand-name\">flutu</div>
           </div>
 
-          <h1>Entrar</h1>
-          <div class=\"subtitle\">Acesse sua conta Flutu</div>
+          <h1>Sign in</h1>
+          <div class=\"subtitle\">Access your Flutu account</div>
 
           <form method=\"POST\" action=\"/login\">
             <div class=\"field\">
-              <label for=\"email\">E-mail</label>
-              <input id=\"email\" name=\"email\" type=\"email\" placeholder=\"voce@flutu.com\" required />
+              <label for=\"email\">Email</label>
+              <input id=\"email\" name=\"email\" type=\"email\" placeholder=\"you@example.com\" required />
             </div>
 
             <div class=\"field\">
-              <label for=\"password\">Senha</label>
-              <input id=\"password\" name=\"password\" type=\"password\" placeholder=\"Digite sua senha\" required />
+              <label for=\"password\">Password</label>
+              <input id=\"password\" name=\"password\" type=\"password\" placeholder=\"Enter your password\" required />
             </div>
 
-            <button type=\"submit\">Entrar</button>
+            <button type=\"submit\">Sign in</button>
             {error_html}
           </form>
 
           {google_button}
+                    <a class=\"repo-link\" href=\"https://github.com/freedomson/flutu\" target=\"_blank\" rel=\"noopener noreferrer\">
+                        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.08c-3.1.67-3.76-1.32-3.76-1.32-.51-1.3-1.24-1.65-1.24-1.65-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 .1.76 2.14 3.54 1.52.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.11-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.12-1.45 3.05-1.15 3.05-1.15.61 1.54.23 2.68.12 2.96.72.78 1.14 1.78 1.14 3.01 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.02.76 2.06v3.05c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z\"/></svg>
+                        <span>View project on GitHub</span>
+                    </a>
         </div>
       </section>
     </div>
@@ -203,7 +210,7 @@ def render_login_page(error_message=""):
 
 def render_dashboard(email):
     return f"""<!DOCTYPE html>
-<html lang=\"pt-BR\">
+<html lang=\"en\">
   <head>
     <meta charset=\"UTF-8\" />
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
@@ -222,19 +229,19 @@ def render_dashboard(email):
       .badge {{ display: inline-block; background: #e8f8f1; color: #0f7c5d; padding: 8px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }}
       h1 {{ margin: 18px 0 12px; font-size: clamp(2rem, 3vw, 3rem); letter-spacing: -0.05em; }}
       .email {{ font-size: 1.05rem; color: var(--muted); }}
-        @media (max-width: 620px) {{ .panel {{ margin: 18px; padding: 24px 18px; }} .topbar {{ flex-direction: column; align-items: flex-start; }} }}
+            @media (max-width: 620px) {{ .panel {{ margin: 18px; padding: 24px 18px; }} .topbar {{ flex-direction: column; align-items: flex-start; }} }}
     </style>
   </head>
   <body>
     <div class=\"panel\">
       <div class=\"topbar\">
         <div class=\"brand\"><span class=\"mark\">F</span> flutu</div>
-        <a class=\"logout\" href=\"/logout\">Sair</a>
+        <a class=\"logout\" href=\"/logout\">Sign out</a>
       </div>
-      <div class=\"badge\">Sessão ativa</div>
-      <h1>Bem-vindo ao Flutu</h1>
-      <div class=\"email\">Você entrou como: <strong>{html.escape(email)}</strong></div>
-            <a class=\"decision-link\" href=\"/decision\">Escolher um caminho</a>
+            <div class=\"badge\">Active session</div>
+            <h1>Welcome to Flutu</h1>
+            <div class=\"email\">Signed in as: <strong>{html.escape(email)}</strong></div>
+            <a class=\"decision-link\" href=\"/decision\">Choose a path</a>
     </div>
   </body>
 </html>
@@ -257,7 +264,7 @@ class AppHandler(BaseHTTPRequestHandler):
             )
             self.end_headers()
             self.wfile.write(
-                b"<!doctype html><html><head><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"0;url=/\"></head><body><script>window.location.href='/'</script><p>Saindo...</p></body></html>"
+                b"<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"0;url=/\"></head><body><script>window.location.href='/'</script><p>Signing out...</p></body></html>"
             )
             return
 
@@ -266,7 +273,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.end_headers()
-                self.wfile.write(render_login_page("Google OAuth não configurado. Defina FLUTU_GOOGLE_CLIENT_ID e FLUTU_GOOGLE_CLIENT_SECRET.").encode("utf-8"))
+                self.wfile.write(render_login_page("Google sign-in is not configured. Set FLUTU_GOOGLE_CLIENT_ID and FLUTU_GOOGLE_CLIENT_SECRET.").encode("utf-8"))
                 return
             self.send_response(302)
             self.send_header("Location", google_login_url())
@@ -280,7 +287,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.end_headers()
-                self.wfile.write(render_login_page("Falha ao autenticar com Google. Código ausente.").encode("utf-8"))
+                self.wfile.write(render_login_page("Google sign-in failed. The authorization code is missing.").encode("utf-8"))
                 return
 
             token_payload = {
@@ -303,7 +310,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.end_headers()
-                self.wfile.write(render_login_page("Não foi possível trocar o código do Google por um token de sessão.").encode("utf-8"))
+                self.wfile.write(render_login_page("Could not exchange the Google authorization code for a session token.").encode("utf-8"))
                 return
 
             id_token = token_json.get("id_token")
@@ -311,7 +318,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.end_headers()
-                self.wfile.write(render_login_page("Google não devolveu um id_token válido.").encode("utf-8"))
+                self.wfile.write(render_login_page("Google did not return a valid ID token.").encode("utf-8"))
                 return
 
             claims = decode_jwt_payload(id_token)
@@ -320,7 +327,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.end_headers()
-                self.wfile.write(render_login_page("Google não devolveu um e-mail válido.").encode("utf-8"))
+                self.wfile.write(render_login_page("Google did not return a valid email address.").encode("utf-8"))
                 return
 
             self.send_response(302)
@@ -413,7 +420,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 self.send_header("Cache-Control", "no-store")
                 self.end_headers()
                 self.wfile.write(
-                    json.dumps({"error": "Autenticação necessária."}).encode("utf-8")
+                    json.dumps({"error": "Authentication required."}).encode("utf-8")
                 )
                 return
             self.handle_decision()
@@ -444,24 +451,24 @@ class AppHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()
-        self.wfile.write(render_login_page("E-mail ou senha inválidos.").encode("utf-8"))
+        self.wfile.write(render_login_page("Invalid email or password.").encode("utf-8"))
 
     def handle_check_last_number(self):
         try:
             length = int(self.headers.get("Content-Length", "0"))
             payload = json.loads(self.rfile.read(length).decode("utf-8"))
         except (ValueError, UnicodeDecodeError, json.JSONDecodeError):
-            self.send_error(400, "Corpo deve ser um JSON válido.")
+            self.send_error(400, "Request body must be valid JSON.")
             return
 
         values = payload.get("set") if isinstance(payload, dict) else None
         if not isinstance(values, list) or not values:
-            self.send_error(400, "Envie um array não vazio na propriedade 'set'.")
+            self.send_error(400, "Provide a non-empty array in the 'set' property.")
             return
 
         last_number = values[-1]
         if isinstance(last_number, bool) or not isinstance(last_number, (int, float)):
-            self.send_error(400, "O último item do conjunto deve ser um número.")
+            self.send_error(400, "The last item in the set must be a number.")
             return
 
         result = last_number > 1
@@ -480,7 +487,7 @@ class AppHandler(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
             self.wfile.write(
-                json.dumps({"error": "Não foi possível obter uma nova decisão agora."}).encode("utf-8")
+                json.dumps({"error": "Could not get a new decision right now."}).encode("utf-8")
             )
             return
 
@@ -496,5 +503,5 @@ class AppHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     server = ThreadingHTTPServer(("0.0.0.0", 8000), AppHandler)
-    print("Servidor de login ativo em http://127.0.0.1:8000")
+    print("Login server running at http://127.0.0.1:8000")
     server.serve_forever()

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Flutu | Escolher um caminho</title>
+    <title>Flutu | Choose a path</title>
     <style>
       :root {
         font-family: Arial, Helvetica, sans-serif;
@@ -56,16 +56,16 @@
   </head>
   <body>
     <main>
-      <p class="eyebrow">Uma pequena decisão</p>
-      <h1>Vou para a direita ou para a esquerda?</h1>
-      <p class="description">Respire fundo e deixe o acaso escolher. Cada vez que tocar no botão, consultaremos uma nova permutação aleatória. O conjunto não será mostrado: você verá apenas se deve seguir para a direita ou para a esquerda.</p>
+      <p class="eyebrow">A small decision</p>
+      <h1>Should I go right or left?</h1>
+      <p class="description">Take a breath and let chance choose. Each time you click the button, we request a new random permutation. The set will not be shown; you will only see whether to go right or left.</p>
       <form id="decision-form">
-        <button id="submit-button" type="submit">Escolher por mim</button>
+        <button id="submit-button" type="submit">Choose for me</button>
       </form>
       <p id="answer" role="status" aria-live="polite"></p>
-      <p class="source">Fonte da aleatoriedade quântica: <a href="https://qrng.anu.edu.au/random-permutations/" target="_blank" rel="noopener noreferrer">Australian National University (ANU) — Quantum Random Number Generator</a>.</p>
-      <p class="source"><a href="/decision/info">Mais informações: flutuações quânticas e a interpretação dos muitos mundos</a>.</p>
-      <a class="back-link" href="/dashboard">← Voltar ao dashboard</a>
+      <p class="source">Source of quantum randomness: <a href="https://qrng.anu.edu.au/random-permutations/" target="_blank" rel="noopener noreferrer">Australian National University (ANU) — Quantum Random Number Generator</a>.</p>
+      <p class="source"><a href="/decision/info">Learn more: quantum fluctuations and the many-worlds interpretation</a>.</p>
+      <a class="back-link" href="/dashboard">← Back to dashboard</a>
     </main>
     <script>
       const form = document.getElementById("decision-form");
@@ -75,16 +75,16 @@
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
         button.disabled = true;
-        answer.textContent = "Consultando…";
+        answer.textContent = "Getting a result…";
         delete answer.dataset.state;
         try {
           const response = await fetch("/api/decision", {
             method: "POST",
           });
           const decision = await response.json();
-          if (!response.ok) throw new Error(decision.error || "Não foi possível obter uma decisão.");
+          if (!response.ok) throw new Error(decision.error || "Could not get a decision.");
           const goRight = decision.go_right;
-          answer.textContent = goRight ? "Vá para a direita →" : "Vá para a esquerda ←";
+          answer.textContent = goRight ? "Go right →" : "Go left ←";
           answer.dataset.state = String(goRight);
         } catch (error) {
           answer.textContent = error.message;

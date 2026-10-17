@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Flutu | Verificar conjunto</title>
+    <title>Flutu | Check a Set</title>
     <style>
       :root {
         color-scheme: light;
@@ -61,12 +61,12 @@
   </head>
   <body>
     <main>
-      <h1>Verificar o último número</h1>
-      <p>Informe os números do conjunto separados por vírgulas. A API retorna <code>true</code> se o último for maior que 1; caso contrário, retorna <code>false</code>.</p>
+      <h1>Check the last number</h1>
+      <p>Enter the set of numbers separated by commas. The API returns <code>true</code> if the last number is greater than 1; otherwise, it returns <code>false</code>.</p>
       <form id="check-form">
-        <label for="set-values">Conjunto</label>
+        <label for="set-values">Set</label>
         <input id="set-values" name="set" value="1, 2" inputmode="numeric" autocomplete="off" required />
-        <button id="submit-button" type="submit">Verificar</button>
+        <button id="submit-button" type="submit">Check</button>
       </form>
       <p id="result" role="status" aria-live="polite"></p>
     </main>
@@ -82,13 +82,13 @@
         const numbers = values.map(Number);
 
         if (values.some((value) => value === "") || numbers.some((value) => !Number.isFinite(value))) {
-          result.textContent = "Informe apenas números separados por vírgulas.";
+          result.textContent = "Enter numbers separated by commas.";
           result.dataset.state = "error";
           return;
         }
 
         button.disabled = true;
-        result.textContent = "Verificando…";
+        result.textContent = "Checking…";
         delete result.dataset.state;
 
         try {
@@ -97,7 +97,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ set: numbers }),
           });
-          if (!response.ok) throw new Error("A API não conseguiu validar o conjunto.");
+          if (!response.ok) throw new Error("The API could not validate the set.");
           const isLastNumberGreaterThanOne = await response.json();
           result.textContent = String(isLastNumberGreaterThanOne);
           result.dataset.state = String(isLastNumberGreaterThanOne);
