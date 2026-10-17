@@ -14,3 +14,9 @@
 - Pages linked from a level 2 page are level 3 and must return to the level 2 page that opened them. Continue this pattern at every level: each page returns to its immediate parent, never automatically to sign-in or the root, except when the current page is the dashboard.
 - Add new pages to their parent's navigation and register their server routes so the hierarchy stays visible and predictable.
 - When creating a page, identify its parent, add a “Back” link to that parent, and protect the server route with the standard session authentication.
+
+## Keep documentation up to date
+
+- Update the relevant documentation whenever a meaningful code change changes user-visible behavior, routes, APIs, authentication, configuration, setup, or operating procedures.
+- Keep `README.md` accurate for changes affecting how the project is installed, configured, run, or used. Update other relevant docs when a change is specific to a feature or API.
+- Make documentation updates in the same change as the implementation, and verify examples, URLs, and instructions against the current code. Do not make unrelated documentation-only edits for changes that do not affect documented behavior.
