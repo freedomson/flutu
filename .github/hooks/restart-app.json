@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "bash .github/hooks/restart-app.sh",
+        "timeout": 30
+      }
+    ]
+  }
+}

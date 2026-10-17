@@ -2,6 +2,7 @@ import base64
 import html
 import json
 import os
+import re
 from http import cookies
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib import parse, request
@@ -62,6 +63,55 @@ def set_session_cookie(email):
     return f"session={email}; Path=/; HttpOnly; SameSite=Lax"
 
 
+def fetch_random_direction():
+    page_request = request.Request(
+        "https://qrng.anu.edu.au/random-permutations/",
+        headers={"User-Agent": "Flutu/1.0"},
+    )
+    with request.urlopen(page_request, timeout=20) as response:
+        page = response.read().decode("utf-8")
+
+    nonce_match = re.search(
+        r'name="permutation_nonce_field"\s+value="([^"]+)"', page
+    )
+    if not nonce_match:
+        raise ValueError("Não foi possível obter o nonce do gerador aleatório.")
+
+    form_data = parse.urlencode(
+        {
+            "set_num": "1",
+            "max_num": "2",
+            "action": "permutation_action",
+            "permutation_nonce_field": nonce_match.group(1),
+            "_wp_http_referer": "/random-permutations/",
+        }
+    ).encode("utf-8")
+    api_request = request.Request(
+        "https://qrng.anu.edu.au/wp-admin/admin-ajax.php",
+        data=form_data,
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Referer": "https://qrng.anu.edu.au/random-permutations/",
+            "User-Agent": "Flutu/1.0",
+        },
+    )
+    with request.urlopen(api_request, timeout=20) as response:
+        result = json.loads(response.read().decode("utf-8"))
+
+    if isinstance(result, str):
+        result = json.loads(result)
+    if not isinstance(result, dict):
+        raise ValueError("O gerador retornou uma resposta inválida.")
+
+    permutations = result.get("output") if result.get("type") == "success" else None
+    if not isinstance(permutations, list) or not permutations:
+        raise ValueError("O gerador não retornou uma permutação.")
+    values = permutations[0]
+    if not isinstance(values, list) or not values or values[-1] not in (1, 2):
+        raise ValueError("O gerador retornou uma permutação inválida.")
+    return values[-1] > 1
+
+
 def render_login_page(error_message=""):
     google_button = ""
     if GOOGLE_CLIENT_ID:
@@ -94,20 +144,9 @@ def render_login_page(error_message=""):
       body {{
         margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at top left, #f9fbff 0%, var(--bg-2) 28%, var(--bg) 100%); font-family: Arial, Helvetica, sans-serif; color: var(--text);
       }}
-      .login-shell {{ width: min(100%, 960px); min-height: 680px; display: grid; grid-template-columns: 1.1fr 0.9fr; background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 32px; overflow: hidden; box-shadow: 0 24px 70px rgba(69, 91, 157, 0.18); }}
-      .hero {{ background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 38%, #3b82f6 100%); padding: 54px 42px; position: relative; display: flex; flex-direction: column; justify-content: center; }}
-      .hero::before {{ content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.2), transparent 35%); }}
-      .hero > * {{ position: relative; z-index: 1; }}
-      .brand-mini {{ display: inline-flex; align-items: center; gap: 10px; color: #ffffff; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.75rem; opacity: 0.9; }}
-      .brand-mark {{ width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #89efff, #a7b8ff); position: relative; box-shadow: inset 0 2px 10px rgba(255,255,255,0.45); }}
-      .brand-mark::before {{ content: "F"; position: absolute; inset: 0; display: grid; place-items: center; color: #0b1b43; font-weight: 800; font-size: 1.5rem; }}
-      .hero h2 {{ margin: 28px 0 12px; font-size: clamp(2.3rem, 3vw, 4rem); line-height: 1.05; color: white; letter-spacing: -0.05em; }}
-      .hero p {{ margin: 0; font-size: 1.02rem; color: rgba(255,255,255,0.82); max-width: 360px; }}
-      .feature-list {{ margin-top: 26px; list-style: none; padding: 0; color: rgba(255,255,255,0.9); }}
-      .feature-list li {{ display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 0.97rem; }}
-      .feature-list li::before {{ content: "•"; font-size: 1.5rem; color: #8ef0ff; }}
-      .form-side {{ background: rgba(255,255,255,0.74); display: flex; align-items: center; justify-content: center; padding: 36px 32px; }}
-      .login-box {{ width: min(100%, 380px); background: var(--card); border: 1px solid rgba(17, 24, 39, 0.06); border-radius: 28px; box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08); padding: 30px 28px 20px; }}
+      .login-shell {{ width: min(100%, 460px); background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 32px; overflow: hidden; box-shadow: 0 24px 70px rgba(69, 91, 157, 0.18); }}
+      .form-side {{ display: flex; align-items: center; justify-content: center; padding: 36px 32px; }}
+      .login-box {{ width: 100%; background: var(--card); border: 1px solid rgba(17, 24, 39, 0.06); border-radius: 28px; box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08); padding: 30px 28px 20px; }}
       .brand-row {{ display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 16px; }}
       .brand-logo {{ width: 54px; height: 54px; border-radius: 18px; background: linear-gradient(135deg, #3dd9ff, #6d7cff, #8b5cf6); box-shadow: inset 0 2px 12px rgba(255,255,255,0.35); display: grid; place-items: center; color: white; font-weight: 800; font-size: 1.5rem; }}
       .brand-name {{ font-size: 1.9rem; font-weight: 800; letter-spacing: -0.06em; background: linear-gradient(90deg, #2f5de6, #4ca6ff, #7f61ff); -webkit-background-clip: text; background-clip: text; color: transparent; }}
@@ -123,22 +162,11 @@ def render_login_page(error_message=""):
       .google-btn {{ background: #ffffff; border: 1px solid #d6e0ff; color: #1f2d3d; }}
       .google-disabled {{ background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }}
       .error {{ margin-top: 10px; color: var(--error); font-size: 0.85rem; min-height: 20px; }}
-      @media (max-width: 780px) {{ .login-shell {{ grid-template-columns: 1fr; min-height: auto; }} .hero {{ padding: 36px 24px; }} .form-side {{ padding: 24px 18px 32px; }} }}
+      @media (max-width: 520px) {{ .login-shell {{ border-radius: 24px; }} .form-side {{ padding: 20px 16px; }} .login-box {{ padding: 26px 20px 18px; }} }}
     </style>
   </head>
   <body>
     <div class=\"login-shell\">
-      <section class=\"hero\">
-        <div class=\"brand-mini\"><span class=\"brand-mark\"></span> Flutu</div>
-        <h2>Organize o seu dia com clareza.</h2>
-        <p>Um espaço pensado para acompanhar tarefas, prioridades e projetos em movimento com foco, rapidez e energia.</p>
-        <ul class=\"feature-list\">
-          <li>Gestão simples de tarefas</li>
-          <li>Fluxo de trabalho mais leve</li>
-          <li>Centro de produtividade para o seu time</li>
-        </ul>
-      </section>
-
       <section class=\"form-side\">
         <div class=\"login-box\">
           <div class=\"brand-row\">
@@ -189,14 +217,12 @@ def render_dashboard(email):
       .brand {{ display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.7rem; letter-spacing: -0.05em; background: linear-gradient(90deg, #3b82f6, #7c3aed); -webkit-background-clip: text; background-clip: text; color: transparent; }}
       .mark {{ width: 42px; height: 42px; border-radius: 14px; background: linear-gradient(135deg, #3dd9ff, #5a67ff, #8b5cf6); display: grid; place-items: center; color: white; font-weight: 800; }}
       .logout {{ text-decoration: none; color: var(--primary); font-weight: 700; background: var(--primary-soft); padding: 10px 16px; border-radius: 12px; }}
+            .decision-link {{ display: inline-block; margin-top: 20px; text-decoration: none; color: white; font-weight: 700; background: var(--primary); padding: 12px 18px; border-radius: 12px; }}
+            .decision-link:hover {{ background: #2d4ed0; }}
       .badge {{ display: inline-block; background: #e8f8f1; color: #0f7c5d; padding: 8px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }}
       h1 {{ margin: 18px 0 12px; font-size: clamp(2rem, 3vw, 3rem); letter-spacing: -0.05em; }}
       .email {{ font-size: 1.05rem; color: var(--muted); }}
-      .card-tiles {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 26px; }}
-      .tile {{ background: #f6f9ff; border: 1px solid rgba(93, 111, 175, 0.12); border-radius: 18px; padding: 18px 16px; }}
-      .tile strong {{ display: block; font-size: 1.6rem; margin-bottom: 6px; color: var(--text); }}
-      .tile span {{ color: var(--muted); font-size: 0.9rem; }}
-      @media (max-width: 620px) {{ .panel {{ margin: 18px; padding: 24px 18px; }} .card-tiles {{ grid-template-columns: 1fr; }} .topbar {{ flex-direction: column; align-items: flex-start; }} }}
+        @media (max-width: 620px) {{ .panel {{ margin: 18px; padding: 24px 18px; }} .topbar {{ flex-direction: column; align-items: flex-start; }} }}
     </style>
   </head>
   <body>
@@ -208,11 +234,7 @@ def render_dashboard(email):
       <div class=\"badge\">Sessão ativa</div>
       <h1>Bem-vindo ao Flutu</h1>
       <div class=\"email\">Você entrou como: <strong>{html.escape(email)}</strong></div>
-      <div class=\"card-tiles\">
-        <div class=\"tile\"><strong>12</strong><span>Tarefas</span></div>
-        <div class=\"tile\"><strong>4</strong><span>Projetos</span></div>
-        <div class=\"tile\"><strong>86%</strong><span>Produtividade</span></div>
-      </div>
+            <a class=\"decision-link\" href=\"/decision\">Escolher um caminho</a>
     </div>
   </body>
 </html>
@@ -331,6 +353,45 @@ class AppHandler(BaseHTTPRequestHandler):
                 self.wfile.write(f.read())
             return
 
+        if path == "/permutation-checker":
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            with open(os.path.join(BASE_DIR, "permutation-checker.html"), "rb") as f:
+                self.wfile.write(f.read())
+            return
+
+        if path == "/decision/info":
+            if not extract_session_email(self.headers.get("Cookie", "")):
+                self.send_response(302)
+                self.send_header("Location", "/")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            with open(os.path.join(BASE_DIR, "quantum-info.html"), "rb") as f:
+                self.wfile.write(f.read())
+            return
+
+        if path == "/decision":
+            if not extract_session_email(self.headers.get("Cookie", "")):
+                self.send_response(302)
+                self.send_header("Location", "/")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            with open(os.path.join(BASE_DIR, "decision.html"), "rb") as f:
+                self.wfile.write(f.read())
+            return
+
         if path == "/":
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -345,6 +406,23 @@ class AppHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/api/decision":
+            if not extract_session_email(self.headers.get("Cookie", "")):
+                self.send_response(401)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(
+                    json.dumps({"error": "Autenticação necessária."}).encode("utf-8")
+                )
+                return
+            self.handle_decision()
+            return
+
+        if parsed.path == "/api/check-last-number":
+            self.handle_check_last_number()
+            return
+
         if parsed.path != "/login":
             self.send_response(404)
             self.end_headers()
@@ -367,6 +445,50 @@ class AppHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()
         self.wfile.write(render_login_page("E-mail ou senha inválidos.").encode("utf-8"))
+
+    def handle_check_last_number(self):
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            payload = json.loads(self.rfile.read(length).decode("utf-8"))
+        except (ValueError, UnicodeDecodeError, json.JSONDecodeError):
+            self.send_error(400, "Corpo deve ser um JSON válido.")
+            return
+
+        values = payload.get("set") if isinstance(payload, dict) else None
+        if not isinstance(values, list) or not values:
+            self.send_error(400, "Envie um array não vazio na propriedade 'set'.")
+            return
+
+        last_number = values[-1]
+        if isinstance(last_number, bool) or not isinstance(last_number, (int, float)):
+            self.send_error(400, "O último item do conjunto deve ser um número.")
+            return
+
+        result = last_number > 1
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(json.dumps(result).encode("utf-8"))
+
+    def handle_decision(self):
+        try:
+            go_right = fetch_random_direction()
+        except (OSError, ValueError, json.JSONDecodeError):
+            self.send_response(502)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(
+                json.dumps({"error": "Não foi possível obter uma nova decisão agora."}).encode("utf-8")
+            )
+            return
+
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(json.dumps({"go_right": go_right}).encode("utf-8"))
 
     def log_message(self, format, *args):
         return

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flutu | Escolher um caminho</title>
+    <style>
+      :root {
+        font-family: Arial, Helvetica, sans-serif;
+        color: #14213d;
+        background: #f3f7ff;
+      }
+      * { box-sizing: border-box; }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: radial-gradient(circle at top left, #f9fbff, #eaf3ff 35%, #f3f7ff 78%);
+      }
+      main {
+        width: min(100%, 560px);
+        padding: 36px;
+        border: 1px solid #dfe8ff;
+        border-radius: 26px;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 20px 55px rgba(69, 91, 157, 0.16);
+      }
+      .eyebrow { margin: 0 0 10px; color: #4f6fff; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+      h1 { margin: 0; font-size: clamp(1.8rem, 6vw, 2.4rem); letter-spacing: -0.04em; }
+      .description { margin: 12px 0 24px; color: #53627b; line-height: 1.55; }
+      button {
+        width: 100%;
+        margin-top: 14px;
+        padding: 14px;
+        border: 0;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #4f6fff, #6a8dff);
+        color: #fff;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button:disabled { opacity: 0.65; cursor: wait; }
+      #answer { min-height: 32px; margin: 22px 0 0; font-size: 1.25rem; font-weight: 800; }
+      #answer[data-state="true"] { color: #137a45; }
+      #answer[data-state="false"] { color: #a34518; }
+      #answer[data-state="error"] { color: #b42318; font-size: 1rem; }
+      .back-link { display: inline-block; margin-top: 20px; color: #3655d4; font-weight: 700; text-decoration: none; }
+      .back-link:hover { text-decoration: underline; }
+      .source { margin: 20px 0 0; color: #53627b; font-size: 0.85rem; line-height: 1.5; }
+      .source a { color: #3655d4; font-weight: 700; }
+      code { padding: 2px 5px; border-radius: 5px; background: #f0f3fa; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Uma pequena decisão</p>
+      <h1>Vou para a direita ou para a esquerda?</h1>
+      <p class="description">Respire fundo e deixe o acaso escolher. Cada vez que tocar no botão, consultaremos uma nova permutação aleatória. O conjunto não será mostrado: você verá apenas se deve seguir para a direita ou para a esquerda.</p>
+      <form id="decision-form">
+        <button id="submit-button" type="submit">Escolher por mim</button>
+      </form>
+      <p id="answer" role="status" aria-live="polite"></p>
+      <p class="source">Fonte da aleatoriedade quântica: <a href="https://qrng.anu.edu.au/random-permutations/" target="_blank" rel="noopener noreferrer">Australian National University (ANU) — Quantum Random Number Generator</a>.</p>
+      <p class="source"><a href="/decision/info">Mais informações: flutuações quânticas e a interpretação dos muitos mundos</a>.</p>
+      <a class="back-link" href="/dashboard">← Voltar ao dashboard</a>
+    </main>
+    <script>
+      const form = document.getElementById("decision-form");
+      const button = document.getElementById("submit-button");
+      const answer = document.getElementById("answer");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        button.disabled = true;
+        answer.textContent = "Consultando…";
+        delete answer.dataset.state;
+        try {
+          const response = await fetch("/api/decision", {
+            method: "POST",
+          });
+          const decision = await response.json();
+          if (!response.ok) throw new Error(decision.error || "Não foi possível obter uma decisão.");
+          const goRight = decision.go_right;
+          answer.textContent = goRight ? "Vá para a direita →" : "Vá para a esquerda ←";
+          answer.dataset.state = String(goRight);
+        } catch (error) {
+          answer.textContent = error.message;
+          answer.dataset.state = "error";
+        } finally {
+          button.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>

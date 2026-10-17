@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flutu | Verificar conjunto</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #14213d;
+        background: #f3f7ff;
+      }
+      * { box-sizing: border-box; }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: radial-gradient(circle at top left, #f9fbff, #eaf3ff 35%, #f3f7ff 78%);
+      }
+      main {
+        width: min(100%, 520px);
+        padding: 32px;
+        border: 1px solid #dfe8ff;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 18px 50px rgba(69, 91, 157, 0.14);
+      }
+      h1 { margin: 0 0 10px; font-size: 1.7rem; }
+      p { color: #53627b; line-height: 1.5; }
+      label { display: block; margin: 22px 0 8px; font-weight: 700; }
+      input {
+        width: 100%;
+        padding: 13px 14px;
+        border: 1px solid #cbd7f0;
+        border-radius: 12px;
+        font: inherit;
+      }
+      input:focus { outline: 3px solid #4f6fff33; border-color: #4f6fff; }
+      button {
+        width: 100%;
+        margin-top: 14px;
+        padding: 13px;
+        border: 0;
+        border-radius: 12px;
+        background: #4f6fff;
+        color: white;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button:disabled { opacity: 0.65; cursor: wait; }
+      #result { min-height: 28px; margin: 18px 0 0; font-weight: 700; }
+      #result[data-state="true"] { color: #137a45; }
+      #result[data-state="false"] { color: #a34518; }
+      #result[data-state="error"] { color: #b42318; }
+      code { padding: 2px 5px; border-radius: 5px; background: #f0f3fa; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Verificar o último número</h1>
+      <p>Informe os números do conjunto separados por vírgulas. A API retorna <code>true</code> se o último for maior que 1; caso contrário, retorna <code>false</code>.</p>
+      <form id="check-form">
+        <label for="set-values">Conjunto</label>
+        <input id="set-values" name="set" value="1, 2" inputmode="numeric" autocomplete="off" required />
+        <button id="submit-button" type="submit">Verificar</button>
+      </form>
+      <p id="result" role="status" aria-live="polite"></p>
+    </main>
+    <script>
+      const form = document.getElementById("check-form");
+      const input = document.getElementById("set-values");
+      const button = document.getElementById("submit-button");
+      const result = document.getElementById("result");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const values = input.value.split(",").map((value) => value.trim());
+        const numbers = values.map(Number);
+
+        if (values.some((value) => value === "") || numbers.some((value) => !Number.isFinite(value))) {
+          result.textContent = "Informe apenas números separados por vírgulas.";
+          result.dataset.state = "error";
+          return;
+        }
+
+        button.disabled = true;
+        result.textContent = "Verificando…";
+        delete result.dataset.state;
+
+        try {
+          const response = await fetch("/api/check-last-number", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ set: numbers }),
+          });
+          if (!response.ok) throw new Error("A API não conseguiu validar o conjunto.");
+          const isLastNumberGreaterThanOne = await response.json();
+          result.textContent = String(isLastNumberGreaterThanOne);
+          result.dataset.state = String(isLastNumberGreaterThanOne);
+        } catch (error) {
+          result.textContent = error.message;
+          result.dataset.state = "error";
+        } finally {
+          button.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
