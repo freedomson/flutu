@@ -10,7 +10,7 @@
 {% endblock %}
 {% block content %}
   <main class="card login-card">
-    <div class="brand"><img src="{{ url_for('static', filename='logo.svg') }}" alt="" /> <span>Flutu</span></div>
+    <div class="brand"><img src="{{ url_for('static', filename='logo.svg') }}" alt="Flutu monkey sitting on a cloud" /> <span>Flutu</span></div>
     <h1>Sign in</h1>
     <p class="subtitle">Access your Flutu account</p>
     {% for category, message in get_flashed_messages(with_categories=true) %}

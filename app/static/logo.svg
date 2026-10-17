@@ -1,20 +1,41 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="18" y1="22" x2="160" y2="160" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#00C2FF"/>
-      <stop offset="0.5" stop-color="#5A67FF"/>
-      <stop offset="1" stop-color="#7A4DFF"/>
+    <linearGradient id="sky" x1="24" y1="20" x2="158" y2="164" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#64D8FF"/>
+      <stop offset="0.55" stop-color="#7187FF"/>
+      <stop offset="1" stop-color="#9B70F5"/>
     </linearGradient>
-    <linearGradient id="wave" x1="48" y1="36" x2="126" y2="134" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#E7FBFF"/>
-      <stop offset="1" stop-color="#CFF7FF"/>
+    <linearGradient id="cloud" x1="52" y1="103" x2="128" y2="145" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DDF6FF"/>
     </linearGradient>
+    <clipPath id="tile"><rect x="16" y="16" width="148" height="148" rx="38"/></clipPath>
   </defs>
-  <rect x="16" y="16" width="148" height="148" rx="38" fill="url(#bg)"/>
-  <path d="M56 48C56 43.5817 59.5817 40 64 40H98.5C119.211 40 136 56.7888 136 77.5C136 98.2117 119.211 115 98.5 115H79V135C79 139.418 75.4183 143 71 143H56V48Z" fill="url(#wave)"/>
-  <path d="M79 58H94C107.255 58 118 68.7452 118 82C118 95.2548 107.255 106 94 106H79V58Z" fill="#56E0FF" fill-opacity="0.4"/>
-  <path d="M96 96C129.778 96 142 84.7656 142 70.5C142 63.1518 138.718 56.0197 132.303 50.6515" stroke="#DFFBFF" stroke-width="12" stroke-linecap="round"/>
-  <path d="M48 55H85" stroke="#DFFBFF" stroke-width="12" stroke-linecap="round"/>
-  <path d="M48 90H85" stroke="#DFFBFF" stroke-width="12" stroke-linecap="round"/>
-  <path d="M48 125H72" stroke="#DFFBFF" stroke-width="12" stroke-linecap="round"/>
+  <g clip-path="url(#tile)">
+    <rect x="16" y="16" width="148" height="148" rx="38" fill="url(#sky)"/>
+    <circle cx="47" cy="49" r="3" fill="#E9FBFF" opacity=".9"/>
+    <circle cx="135" cy="57" r="2.5" fill="#E9FBFF" opacity=".8"/>
+    <path d="M36 131C36 121.6 43.6 114 53 114C55.1 101.9 65.7 93 78.4 93C89.1 93 98.3 99.2 102.5 108.2C105.3 106.5 108.5 105.5 112 105.5C121.1 105.5 128.7 112.2 130.1 120.9C138.1 121.5 144.5 128.2 144.5 136.4C144.5 145 137.5 152 128.9 152H54C44.1 152 36 143.9 36 134V131Z" fill="url(#cloud)"/>
+    <path d="M55 131C55 126.6 58.6 123 63 123C64 117.3 69 113 75 113C80.1 113 84.5 116.3 86.2 120.9C87.5 120 89.1 119.5 90.8 119.5C95.1 119.5 98.7 122.7 99.4 126.9C103.2 127.2 106.2 130.4 106.2 134.3C106.2 138.4 102.9 141.7 98.8 141.7H64C59 141.7 55 137.7 55 132.7V131Z" fill="#B9EFFF" opacity=".8"/>
+
+    <!-- A cheerful little monkey riding the cloud -->
+    <path d="M72 101C69 106 67 112 67 119C67 124 71 128 76 128H105C110 128 114 124 114 119C114 112 111 106 107 101H72Z" fill="#8B4C35"/>
+    <path d="M75 108C69 108 65 111 62 116" stroke="#8B4C35" stroke-width="8" stroke-linecap="round"/>
+    <path d="M104 108C110 108 114 111 117 116" stroke="#8B4C35" stroke-width="8" stroke-linecap="round"/>
+    <path d="M76 122C70 123 67 127 69 131C71 135 79 135 85 131" stroke="#8B4C35" stroke-width="7" stroke-linecap="round"/>
+    <path d="M104 122C110 123 113 127 111 131C109 135 101 135 95 131" stroke="#8B4C35" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="61" cy="77" r="13" fill="#75402F"/>
+    <circle cx="119" cy="77" r="13" fill="#75402F"/>
+    <circle cx="61" cy="77" r="6" fill="#F2B99A"/>
+    <circle cx="119" cy="77" r="6" fill="#F2B99A"/>
+    <path d="M90 43C73.4 43 63 55.5 63 73.5C63 91.4 74.2 104 90 104C105.8 104 117 91.4 117 73.5C117 55.5 106.6 43 90 43Z" fill="#9A5A3D"/>
+    <path d="M90 58C78 58 71 66 71 78C71 89 79 97 90 97C101 97 109 89 109 78C109 66 102 58 90 58Z" fill="#F7D5B7"/>
+    <ellipse cx="82" cy="75" rx="2.6" ry="3.5" fill="#38261F"/>
+    <ellipse cx="98" cy="75" rx="2.6" ry="3.5" fill="#38261F"/>
+    <ellipse cx="90" cy="83" rx="7" ry="5" fill="#FFF1E3"/>
+    <ellipse cx="87.5" cy="82" rx="1.5" ry="1.2" fill="#38261F"/>
+    <ellipse cx="92.5" cy="82" rx="1.5" ry="1.2" fill="#38261F"/>
+    <path d="M85 89C88 92 92 92 95 89" stroke="#75402F" stroke-width="2" stroke-linecap="round"/>
+    <path d="M73 58C78 52 84 50 90 50C96 50 102 52 107 58" stroke="#B87955" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+  </g>
 </svg>
