@@ -1,36 +1,78 @@
 # Flutu
 
-A starter project for development.
+Flutu is a small Flask application with Google-only OAuth sign-in, a protected dashboard, and a quantum-random direction demo.
 
-## Run the application
+## Requirements
 
-Configure Google credentials in `.env` (use `.env.example` as a template), then start the server:
+- Python 3.10 or later
+- Google OAuth 2.0 credentials (Web application)
 
-```bash
-bash start_server.sh
+## Setup and run
+
+1. Create the project's virtual environment and install dependencies:
+
+  ```bash
+  python3 -m venv .venv
+  ./.venv/bin/python -m pip install -r requirements.txt
+  ```
+
+2. Copy `.env.example` to `.env` and fill in the Google OAuth client ID, client secret, a unique `FLASK_SECRET_KEY`, and the OAuth redirect URI.
+3. Add the exact redirect URI to the authorized redirect URIs in Google Cloud Console. The example uses `http://127.0.0.1:8000/auth/google/callback`.
+4. Start the app with `bash start_server.sh`.
+5. Open http://127.0.0.1:8000. The development server binds exclusively to `127.0.0.1` and is not exposed to the local network.
+
+Google OAuth is the only sign-in method; there is no local email/password login. For local development, `FLASK_SESSION_COOKIE_SECURE=false` allows cookies over HTTP. Set it to `true` when serving over HTTPS. Never use the development fallback session key in a deployed environment.
+
+## Architecture
+
+```text
+run.py                      Flask development entry point
+app/
+  __init__.py                Application factory and Blueprint registration
+  config.py                  Environment-backed application configuration
+  auth/
+    decorators.py             Server-side login protection
+    routes.py                 Google login, OAuth callback, logout
+  main/
+    routes.py                 Dashboard, decision and API routes
+  services/
+    google_oauth.py           Google authorization-code and userinfo integration
+    quantum_random.py         ANU quantum-random integration
+  templates/
+    base.html                 Shared Jinja layout
+    login.html                Google-only sign-in page
+    dashboard.html            Authenticated root (level 1)
+    decision.html             Decision page (level 2)
+    quantum_info.html          Decision information (level 3)
+  static/
+    logo.svg                  Shared static logo
+tests/
+  test_routes.py              Authentication, route, and session tests
+  test_google_oauth.py         Google OAuth service tests
 ```
 
-Open http://localhost:8000. The script loads variables from `.env` before starting the server. Do not run `python3 server.py` directly if you want to use Google sign-in.
+Routes are grouped by concern in Flask Blueprints and registered by `create_app()`. Templates extend `base.html`; integration and business logic live in dedicated modules, not in route handlers or templates. Google sign-in uses the OAuth 2.0 authorization-code flow with session-bound state validation and Google's userinfo endpoint.
 
-## Choose a path
+## Authentication and page hierarchy
 
-After signing in, the dashboard links to **Choose a path**. The decision page and its API require the usual authenticated session. Each click on **Choose for me** requests a new random permutation from ANU. The page shows only the chosen direction, not the permutation.
+- Google OAuth login: `/auth/login`; callback: `/auth/callback` (the legacy `/auth/google/callback` remains supported); logout: `/auth/logout`.
+- `/dashboard` is the authenticated root at level 1. Its child pages return to their immediate parent.
+- `/decision` is level 2; `/decision/info` is level 3 and returns to `/decision`.
+- The dashboard provides the single **Choose a path** option.
+- Unauthenticated page requests redirect to sign-in. Protected APIs return JSON `401` without performing the requested action.
 
-The decision page links to an informational page about quantum randomness and the many-worlds interpretation. This is an explanatory analogy, not evidence that a person's consciousness splits across universes.
+## APIs
 
-## Check the last number in a set
+`POST /api/decision` fetches a fresh permutation from the ANU Quantum Random Number Generator and returns the chosen direction:
 
-The demo interface is available at http://localhost:8000/permutation-checker. The API accepts a `set` array and returns the JSON boolean `true` if its last value is greater than 1, or `false` otherwise:
-
-```http
-POST /api/check-last-number
-Content-Type: application/json
-
-{"set": [1, 2]}
+```json
+{"go_right": true}
 ```
 
-The decision page uses `POST /api/decision`, which requests a new random permutation on each call and returns `{"go_right": true}` or `{"go_right": false}`.
+## Tests
 
-## Automatic restart with Copilot
+Run the route, session-protection, and OAuth-flow tests with `./.venv/bin/python -m unittest discover -s tests -v`.
 
-The `.github/hooks/restart-app.json` hook restarts the server when the agent changes `server.py`, `decision.html`, `quantum-info.html`, `permutation-checker.html`, or `start_server.sh`. It compares file hashes to avoid restarting when those files have not changed. The server starts in the background using `.env`; check `/tmp/flutu-server.log` if it fails to start.
+## Copilot restart hook
+
+The workspace hook in `.github/hooks/restart-app.json` runs `.github/hooks/restart-app.sh` after agent tool actions. It tracks the Flask application, templates, static files, configuration, dependencies, and startup script; when they change, it restarts the local server using `.env`. Logs are written to `/tmp/flutu-server.log`.

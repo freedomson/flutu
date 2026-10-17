@@ -7,7 +7,8 @@ STATE_FILE="$STATE_DIR/copilot-app-source.sha256"
 LOG_FILE="${TMPDIR:-/tmp}/flutu-server.log"
 
 mkdir -p "$STATE_DIR"
-source_hash="$(sha256sum "$ROOT/server.py" "$ROOT/decision.html" "$ROOT/quantum-info.html" "$ROOT/permutation-checker.html" "$ROOT/start_server.sh" | sha256sum | cut -d ' ' -f 1)"
+source_hash="$(find "$ROOT/app" -type f ! -path '*/__pycache__/*' ! -name '*.pyc' -print0 | sort -z | xargs -0 sha256sum; sha256sum "$ROOT/run.py" "$ROOT/requirements.txt" "$ROOT/start_server.sh")"
+source_hash="$(printf '%s\n' "$source_hash" | sha256sum | cut -d ' ' -f 1)"
 
 # Record a baseline on first use; only restart after one of the app files changes.
 if [[ ! -f "$STATE_FILE" ]]; then
@@ -26,7 +27,7 @@ for process_dir in /proc/[0-9]*; do
   process_cwd="$(readlink -f "$process_dir/cwd" 2>/dev/null || true)"
   [[ "$process_cwd" == "$ROOT" ]] || continue
   command_line="$(tr '\0' ' ' < "$process_dir/cmdline" 2>/dev/null || true)"
-  [[ "$command_line" == *" server.py"* || "$command_line" == *"$ROOT/server.py"* ]] || continue
+  [[ "$command_line" == *" run.py"* || "$command_line" == *"$ROOT/run.py"* ]] || continue
   process_id="${process_dir##*/}"
   [[ "$process_id" == "$$" ]] || kill "$process_id" 2>/dev/null || true
 done

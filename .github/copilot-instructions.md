@@ -20,3 +20,15 @@
 - Update the relevant documentation whenever a meaningful code change changes user-visible behavior, routes, APIs, authentication, configuration, setup, or operating procedures.
 - Keep `README.md` accurate for changes affecting how the project is installed, configured, run, or used. Update other relevant docs when a change is specific to a feature or API.
 - Make documentation updates in the same change as the implementation, and verify examples, URLs, and instructions against the current code. Do not make unrelated documentation-only edits for changes that do not affect documented behavior.
+
+## Application architecture (Flask)
+
+- Use the Flask application factory in `app/__init__.py` to configure and create the app. Do not instantiate a global app in feature modules or import the app object directly; this avoids circular imports and keeps tests configurable.
+- Keep the entry point in `run.py` and configuration in `app/config.py`. Add `app/extensions.py` only when the project uses shared Flask extension instances that need centralized initialization.
+- Bind the local development server to `127.0.0.1` only. Do not expose it on `0.0.0.0` or another network interface unless explicitly requested.
+- Group routes by responsibility in Python packages and register each feature's Blueprint in the application factory. Authentication and OAuth belong in `app/auth/`; general pages and HTTP endpoints belong in `app/main/`.
+- Put reusable business logic and external integrations in `app/services/`, separated by concern. Route functions should validate HTTP input, call a service, and return a response; do not put provider integration or business logic in `server.py` or templates.
+- All HTML must be Jinja templates under `app/templates/`. Extend `base.html`, use `url_for()` for internal URLs and static assets, and do not add standalone root-level HTML pages.
+- Put browser assets in `app/static/`. Keep secrets in environment variables or `.env`; never commit credentials.
+- Google OAuth is the only supported sign-in method. Do not add local email/password login or hard-coded users. Preserve OAuth state validation and validate the user's identity with Google's trusted userinfo endpoint. Protect private HTML routes on the server and return JSON `401` responses from protected APIs when there is no valid session.
+- New routes/pages must follow the existing parent/child navigation hierarchy above, be registered in a Blueprint, have tests, and update relevant documentation.

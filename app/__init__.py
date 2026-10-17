@@ -1,0 +1,27 @@
+from flask import Flask, jsonify, redirect, request, session, url_for
+
+from app.config import Config
+
+def create_app(config_object=Config):
+    app = Flask(__name__, template_folder="templates", static_folder="static")
+    app.config.from_object(config_object)
+
+    from app.auth.routes import auth_bp
+    from app.main.routes import main_bp
+
+    app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(main_bp)
+
+    @app.errorhandler(404)
+    def not_found(_error):
+        if request.path.startswith("/api/"):
+            return jsonify(error="Not found"), 404
+        return "Not found", 404
+
+    @app.get("/")
+    def index():
+        if "user" in session:
+            return redirect(url_for("main.dashboard"))
+        return redirect(url_for("auth.login"))
+
+    return app
